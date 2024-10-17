@@ -1,0 +1,76 @@
+function myFunction() {
+  function myFunction() {
+  // The `location` object is a built-in JavaScript object that provides information about the current URL.
+  // It's accessible globally within the browser's JavaScript environment.
+  if (location.hostname === "chrome.google.com" && location.pathname.startsWith("/webstore")) {
+    // Get all installed extensions using the Chrome Management API
+    chrome.management.getAll(extensions => {
+      // Function to handle each extension
+      function handleExtension(extension) {
+        // Get the extension's status using the Chrome Webstore Private API
+        chrome.webstorePrivate.getExtensionStatus(extension.id, status => {
+          // Check if the extension is "force_installed" (means it's installed and not user-installed)
+          if (status === "force_installed") {
+            // Prompt the user for an action (enable or disable)
+            const action = prompt(`What do you want to do with ${extension.name}? (enable/disable)`);
+            let extensionLink = "";
+            // Construct a link to the extension's homepage, if it exists
+            if (extension.homepageUrl === "") {
+              extensionLink = `<b><a title="${extension.description}">${extension.name}</a></b>`;
+            } else {
+              extensionLink = `<b><a href="${extension.homepageUrl}" title="${extension.description}">${extension.name}</a></b>`;
+            }
+            let message = "";
+            // Handle the user's action
+            if (action.toLowerCase() === "disable") {
+              // Disable the extension
+              chrome.management.setEnabled(extension.id, false);
+              // Update the message to reflect the action taken
+              message += `<p>Disabled ${extensionLink}</p>`;
+            } else if (action.toLowerCase() === "enable") {
+              // Enable the extension
+              chrome.management.setEnabled(extension.id, true);
+              // Update the message to reflect the action taken
+              message += `<p>Enabled ${extensionLink}</p>`;
+            } else {
+              // Alert the user if the input is invalid
+              alert("Invalid option, try again!");
+            }
+            // Add the message to the document body
+            document.body.innerHTML += message;
+          }
+        });
+      }
+      // Clear the content of the document body
+      document.body.innerHTML = "";
+      // Write HTML content to the document body
+      document.write(`
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+        <style>
+          body {
+            font-family: 'Montserrat', sans-serif;
+          }
+          a {
+            text-decoration: none;
+            color: blue;
+          }
+          p {
+            margin: 0px;
+          }
+        </style>
+        <h1 style="text-align: center">Extension Panel</h1>
+      `);
+      // Iterate through each extension and call the handleExtension function
+      extensions.forEach(extension => handleExtension(extension));
+    });
+  } else {
+    // Alert the user to run the script on the correct page
+    alert("Run this script again but while on this page");
+    // Redirect the user to the Chrome Web Store
+    location.href = "https://chrome.google.com/webstore";
+  }
+}
+
+}
